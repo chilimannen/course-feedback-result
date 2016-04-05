@@ -5,6 +5,7 @@
 var application = {
     handlers: {},
     id: "",
+    preset: false,
 
     subscribe: function (event, callback) {
         if (this.handlers[event] == null)
@@ -31,5 +32,9 @@ application.subscribe('close-event', function () {
 });
 
 $(document).ready(function () {
-    $('#user-panel').hide();
+    if ($.cookie("vote.id") != "") {
+        application.preset = true;
+        application.id = $.cookie("vote.id");
+    } else
+        $('#user-panel').hide();
 });

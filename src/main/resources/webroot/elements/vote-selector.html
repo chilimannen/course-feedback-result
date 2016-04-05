@@ -37,8 +37,10 @@
             is: 'vote-selector',
 
             ready: function () {
-                this.$['dialog-key'].toggle();
                 var self = this;
+
+                if (!application.preset)
+                    this.$['dialog-key'].toggle();
 
                 application.subscribe('close-event', function () {
                     setTimeout(function () {

@@ -13,8 +13,11 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.impl.CookieImpl;
 import io.vertx.ext.web.templ.JadeTemplateEngine;
 
 /**
@@ -52,6 +55,7 @@ public class WebServer implements Verticle {
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
 
+        router.route().handler(CookieHandler.create());
         router.route().handler(BodyHandler.create());
 
         new APIRouter(router, votings);
@@ -73,12 +77,20 @@ public class WebServer implements Verticle {
 
         router.route("/").handler(context -> {
             jade.render(context, "templates/index", result -> {
+                context.addCookie(new CookieImpl("vote.id", getParam("id", context)));
+
                 if (result.succeeded())
                     context.response().putHeader(HttpHeaders.CONTENT_TYPE, "text/html").end(result.result());
                 else
                     context.fail(result.cause());
             });
         });
+    }
+
+    private String getParam(String key, RoutingContext context) {
+        if (context.request().getParam(key) == null)
+            return "";
+        else return context.request().getParam(key);
     }
 
     private void setResources(Router router) {

@@ -4,6 +4,7 @@
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 
 
 <link rel="import" href="../elements/vote-viewer.html">
@@ -69,6 +70,7 @@
                     </div>
                 </iron-pages>
 
+                <paper-toast class="toast-error" id="view-missing" text="Failed to find the vote."></paper-toast>
             </paper-material>
 
 
@@ -81,26 +83,31 @@
             is: 'user-panel',
             ready: function () {
                 this.page = 0;
-                var self = this;
                 this.topic = 'Loading..';
 
-                application.subscribe("vote-select", function (event) {
-                    self.id = event.id;
-                    self.topic = event.topic;
+                if (application.preset)
+                    this.select({id: application.id});
+                else
+                    application.subscribe("vote-select", this.select);
+            },
 
-                    $.ajax({
-                        type: "GET",
-                        url: "/api/view/" + application.id,
-                        contentType: "application/json; charset=utf-8",
-                        success: function (data) {
-                            console.log(data);
-                            application.publish('vote-loaded', JSON.parse(data));
-                        },
-                        error: function () {
-                            application.publish('close-event');
-                            self.$['view-missing'].open();
-                        }
-                    });
+            select: function (event) {
+                var self = this;
+                self.id = event.id;
+                self.topic = event.topic;
+
+                $.ajax({
+                    type: "GET",
+                    url: "/api/view/" + application.id,
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        console.log(data);
+                        application.publish('vote-loaded', JSON.parse(data));
+                    },
+                    error: function () {
+                        application.publish('close-event');
+                        self.$['view-missing'].open();
+                    }
                 });
             }
         });
